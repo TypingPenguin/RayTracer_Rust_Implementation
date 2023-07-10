@@ -1,6 +1,6 @@
 use std::ops::{Add, Sub, Mul, Div, Neg, Index, IndexMut};
 
-type Point3 = Vec3;
+pub(crate) type Point3 = Vec3;
 pub(crate) type Color = Vec3;
 
 #[derive(Debug, Clone, Copy)]
@@ -21,7 +21,7 @@ impl Vec3 {
         self.e[0]
     }
 
-    fn y(&self) -> f64 {
+    pub(crate) fn y(&self) -> f64 {
         self.e[1]
     }
 
@@ -47,8 +47,8 @@ impl Vec3 {
                               u.e[0]*v.e[1] - u.e[1]*v.e[0])
     }
 
-    fn unit_vector(v: Vec3) -> Vec3 {
-        v / v.length()
+    pub(crate) fn unit_vector(&self) -> Vec3 {
+        *self / self.length()
     }
 }
 
