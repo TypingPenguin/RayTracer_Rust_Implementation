@@ -11,9 +11,9 @@ pub(crate) fn write_color<W: Write>(out: &mut W, pixel_color: Color, samples_per
     let b = pixel_color.z();
 
     let scale = 1.0 / samples_per_pixel as f64;
-    let r = (scale * r);
-    let g = (scale * g);
-    let b = (scale * b);
+    let r = (scale * r).sqrt();
+    let g = (scale * g).sqrt();
+    let b = (scale * b).sqrt();
 
 
     writeln!(out,"{} {} {}", (256.00 * clamp(r, 0.0, 0.999)) as i32 , (256.00 * clamp(g, 0.0, 0.999)) as i32, (256.00 * clamp(b, 0.0, 0.999)) as i32).expect("Error writing color");

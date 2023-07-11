@@ -1,4 +1,5 @@
 use std::ops::{Add, Sub, Mul, Div, Neg, Index, IndexMut};
+use crate::rtweekend;
 
 pub(crate) type Point3 = Vec3;
 pub(crate) type Color = Vec3;
@@ -54,6 +55,36 @@ impl Vec3 {
 
     pub(crate) fn unit_vector(&self) -> Vec3 {
         *self / self.length()
+    }
+}
+
+pub fn random() -> Vec3 {
+    Vec3::new_with_values(rtweekend::random_double(), rtweekend::random_double(), rtweekend::random_double())
+}
+pub fn random_minmax(min: f64,max: f64) -> Vec3 {
+    Vec3::new_with_values(rtweekend::random_double_minmax(min, max), rtweekend::random_double_minmax(min, max), rtweekend::random_double_minmax(min, max))
+}
+
+pub fn random_in_unit_sphere() -> Vec3 {
+    loop {
+        let p = random_minmax(-1.0, 1.0);
+        if p.length_squared() >= 1.0 {
+            continue;
+        }
+        return p;
+    }
+}
+
+pub fn random_unit_vector() -> Vec3 {
+    random_in_unit_sphere().unit_vector()
+}
+
+pub fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
+    let in_unit_sphere = random_in_unit_sphere();
+    if Vec3::dot(in_unit_sphere, *normal) > 0.0 {
+        in_unit_sphere
+    } else {
+        -in_unit_sphere
     }
 }
 
