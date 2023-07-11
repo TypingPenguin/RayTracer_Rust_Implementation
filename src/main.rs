@@ -1,13 +1,17 @@
+use std::rc::Rc;
+use crate::hittable::{hit_record, Hittable};
 use crate::vec3::Point3;
-use crate::hittable::{Hittable, HitRecord};
 
 mod vec3;
 mod ray;
+mod hittable;
+mod hittable_list;
+mod sphere;
 
-fn ray_color(r: &ray::Ray, world: &Hittable) -> vec3::Color {
-    let rec = HitRecord::new();
-    if world.hit(r, 0.0, f64::INFINITY, rec) {
-        return 0.5 * (rec.normal + vec3::Color::new_with_values(1.0, 1.0, 1.0));
+fn ray_color(r: &ray::Ray, world: &dyn Hittable) -> vec3::Color {
+    let mut rec = hit_record::new();
+    if world.hit(r, 0.0, f64::INFINITY, &mut rec) {
+        return (rec.normal + vec3::Color::new_with_values(1.0, 1.0, 1.0)) * 0.5;
     }
     //
     // let t = hit_sphere(&Point3::new_with_values(0.0, 0.0, -1.0), 0.5, r);
@@ -44,14 +48,10 @@ fn main() {
     eprintln!("Image size: {}x{} and aspect ratio: {}", IMAGE_WIDTH, IMAGE_HEIGHT, ASPECT_RATIO);
 
     // World
-    let world = hittable::HittableList::new_with_values(
-        vec![
-            Box::new(hittable::Sphere::new_with_values(
-                vec3::Point3::new_with_values(0.0, 0.0, -1.0), 0.5)),
-            Box::new(hittable::Sphere::new_with_values(
-                vec3::Point3::new_with_values(0.0, -100.5, -1.0), 100.0)),
-        ]
-    );
+    let mut world = hittable_list::HittableList::new();
+    world.add(Rc::new(sphere::Sphere::new_with_values(vec3::Point3::new_with_values(0.0, 0.0, -1.0), 0.5)));
+    world.add(Rc::new(sphere::Sphere::new_with_values(vec3::Point3::new_with_values(0.0, -100.5, -1.0), 100.0)));
+
 
 
     //Camera
@@ -75,7 +75,7 @@ fn main() {
             let u = i as f64 / (IMAGE_WIDTH - 1) as f64;
             let v = j as f64 / (IMAGE_HEIGHT - 1) as f64;
             let r = ray::Ray::new_with_values(origin, lower_left_corner + horizontal * u + vertical * v - origin);
-            let pixel_color = ray_color(&r, world);
+            let pixel_color = ray_color(&r, &world);
             vec3::write_color(pixel_color);
         }
     }

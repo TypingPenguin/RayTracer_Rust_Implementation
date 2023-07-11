@@ -9,7 +9,7 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Vec3{e:[0.0, 0.0, 0.0]}
     }
 
@@ -40,6 +40,11 @@ impl Vec3 {
     pub(crate) fn dot(u: Vec3, v: Vec3) -> f64 {
         u.e[0]*v.e[0] + u.e[1]*v.e[1] + u.e[2]*v.e[2]
     }
+
+    pub fn dot_self(&self, v: Vec3) -> f64 {
+        self.e[0]*v.e[0] + self.e[1]*v.e[1] + self.e[2]*v.e[2]
+    }
+
 
     fn cross(u: Vec3, v: Vec3) -> Vec3 {
         Vec3::new_with_values(u.e[1]*v.e[2] - u.e[2]*v.e[1],
