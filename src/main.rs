@@ -57,6 +57,7 @@ fn main() {
     eprintln!("Image size: {}x{} and aspect ratio: {}", IMAGE_WIDTH, IMAGE_HEIGHT, ASPECT_RATIO);
 
     // World
+    let R = (rtweekend::PI / 4.0).cos();
     let mut world = hittable_list::HittableList::new();
 
     let material_ground = Rc::new(material::Lambertian::new_with_values(vec3::Color::new_with_values(0.8, 0.8, 0.0)));
@@ -74,7 +75,11 @@ fn main() {
 
     //Camera
 
-    let cam = camera::Camera::new();
+    let cam = camera::Camera::new(vec3::Point3::new_with_values(-2.0, 2.0, 1.0),
+                                  vec3::Point3::new_with_values(0.0, 0.0, -1.0),
+                                  vec3::Vec3::new_with_values(0.0, 1.0, 0.0),
+                                  20.0,
+                                  ASPECT_RATIO,);
 
     //Render
 
