@@ -38,7 +38,7 @@ impl Vec3 {
         self.e[0]*self.e[0] + self.e[1]*self.e[1] + self.e[2]*self.e[2]
     }
 
-    pub(crate) fn dot(u: Vec3, v: Vec3) -> f64 {
+    pub(crate) fn dot(u: &Vec3, v: &Vec3) -> f64 {
         u.e[0]*v.e[0] + u.e[1]*v.e[1] + u.e[2]*v.e[2]
     }
 
@@ -56,6 +56,12 @@ impl Vec3 {
     pub(crate) fn unit_vector(&self) -> Vec3 {
         *self / self.length()
     }
+
+    pub fn near_zero(&self) -> bool {
+        let s = 1e-8;
+        (self.e[0].abs() < s) && (self.e[1].abs() < s) && (self.e[2].abs() < s)
+    }
+
 }
 
 pub fn random() -> Vec3 {
@@ -81,11 +87,15 @@ pub fn random_unit_vector() -> Vec3 {
 
 pub fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
     let in_unit_sphere = random_in_unit_sphere();
-    if Vec3::dot(in_unit_sphere, *normal) > 0.0 {
+    if Vec3::dot(&in_unit_sphere, normal) > 0.0 {
         in_unit_sphere
     } else {
         -in_unit_sphere
     }
+}
+
+pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    *v - *n * Vec3::dot(v, n) * 2.0
 }
 
 impl Neg for Vec3 {

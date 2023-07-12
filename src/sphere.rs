@@ -1,12 +1,12 @@
-
-
-use crate::{hittable, vec3};
+use std::rc::Rc;
+use crate::{hittable, material, vec3};
 use crate::ray;
 
 
 pub struct Sphere {
     center: vec3::Point3,
     radius: f64,
+    mat_ptr: Rc<dyn material::Material>,
 }
 
 impl Sphere {
@@ -14,13 +14,15 @@ impl Sphere {
         Sphere {
             center: vec3::Point3::new(),
             radius: 0.0,
+            mat_ptr: Rc::new(material::Lambertian::new_with_values(vec3::Color::new_with_values(0.0, 0.0, 0.0))),
         }
     }
 
-    pub(crate) fn new_with_values(center: vec3::Point3, radius: f64) -> Sphere {
+    pub(crate) fn new_with_values(center: vec3::Point3, radius: f64, material: Rc<dyn material::Material>) -> Sphere {
         Sphere {
             center: center,
             radius: radius,
+            mat_ptr: material,
         }
     }
 
@@ -55,6 +57,7 @@ impl hittable::Hittable for Sphere {
         rec.p = r.at(rec.t);
         let outward_normal = (rec.p - self.center) / self.radius;
         rec.set_face_normal(r, outward_normal);
+        rec.mat_ptr = Option::from(Rc::clone(&self.mat_ptr));
 
         true
     }

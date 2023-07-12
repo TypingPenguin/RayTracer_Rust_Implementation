@@ -10,6 +10,7 @@ mod sphere;
 mod color;
 mod rtweekend;
 mod camera;
+mod material;
 
 fn ray_color(r: &ray::Ray, world: &dyn Hittable, depth: usize) -> vec3::Color {
     let mut rec = hit_record::new();
@@ -18,8 +19,12 @@ fn ray_color(r: &ray::Ray, world: &dyn Hittable, depth: usize) -> vec3::Color {
         return vec3::Color::new_with_values(0.0, 0.0, 0.0);
     }
     if world.hit(r, 0.001, f64::INFINITY, &mut rec) {
-        let target = (rec.p + rec.normal + vec3::random_unit_vector()) as Point3;
-        return ray_color(&ray::Ray::new_with_values(rec.p, target - rec.p), world, depth - 1) * 0.5;
+        let mut scattered = ray::Ray::new();
+        let mut attenuation = vec3::Color::new_with_values(0.0, 0.0, 0.0);
+        if rec.mat_ptr.as_ref().unwrap().scatter(r, &rec, &mut attenuation, &mut scattered) {
+            return attenuation * ray_color(&scattered, world, depth-1);
+        }
+        return vec3::Color::new_with_values(0.0, 0.0, 0.0);
     }
 
     let unit_direction = r.direction().unit_vector();
@@ -30,7 +35,7 @@ fn ray_color(r: &ray::Ray, world: &dyn Hittable, depth: usize) -> vec3::Color {
 fn hit_sphere(center: &Point3, radius: f64, r: &ray::Ray) -> f64 {
     let oc = r.origin() - *center;
     let a = r.direction().length_squared();
-    let half_b = vec3::Vec3::dot(oc, r.direction());
+    let half_b = vec3::Vec3::dot(&oc, &r.direction());
     let c = oc.length_squared() - radius*radius;
     let discriminant = half_b*half_b - a*c;
     if discriminant < 0.0 {
@@ -47,15 +52,24 @@ fn main() {
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const IMAGE_WIDTH: usize = 400;
     const IMAGE_HEIGHT: usize = (IMAGE_WIDTH as f64/ ASPECT_RATIO) as usize;
-    const SAMPLES_PER_PIXEL: usize = 80;
-    const MAX_DEPTH: usize = 20;
+    const SAMPLES_PER_PIXEL: usize = 200;
+    const MAX_DEPTH: usize = 50;
     eprintln!("Image size: {}x{} and aspect ratio: {}", IMAGE_WIDTH, IMAGE_HEIGHT, ASPECT_RATIO);
 
     // World
     let mut world = hittable_list::HittableList::new();
-    world.add(Rc::new(sphere::Sphere::new_with_values(vec3::Point3::new_with_values(0.0, 0.0, -1.0), 0.5)));
-    world.add(Rc::new(sphere::Sphere::new_with_values(vec3::Point3::new_with_values(0.0, -100.5, -1.0), 100.0)));
 
+    let material_ground = Rc::new(material::Lambertian::new_with_values(vec3::Color::new_with_values(0.8, 0.8, 0.0)));
+    let material_center = Rc::new(material::Lambertian::new_with_values(vec3::Color::new_with_values(0.7, 0.3, 0.3)));
+    let material_left = Rc::new(material::Metal::new_with_values(vec3::Color::new_with_values(0.8, 0.8, 0.8), 0.3));
+    let material_right = Rc::new(material::Metal::new_with_values(vec3::Color::new_with_values(0.8, 0.6, 0.2), 1.0));
+
+
+
+    world.add(Rc::new(sphere::Sphere::new_with_values(vec3::Point3::new_with_values(0.0, 0.0, -1.0), 0.5, material_center.clone())));
+    world.add(Rc::new(sphere::Sphere::new_with_values(vec3::Point3::new_with_values(0.0, -100.5, -1.0), 100.0, material_ground.clone())));
+    world.add(Rc::new(sphere::Sphere::new_with_values(vec3::Point3::new_with_values(1.0, 0.0, -1.0), 0.5, material_right.clone())));
+    world.add(Rc::new(sphere::Sphere::new_with_values(vec3::Point3::new_with_values(-1.0, 0.0, -1.0), 0.5, material_left.clone())));
 
 
     //Camera
