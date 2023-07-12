@@ -52,16 +52,16 @@ fn main() {
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const IMAGE_WIDTH: usize = 400;
     const IMAGE_HEIGHT: usize = (IMAGE_WIDTH as f64/ ASPECT_RATIO) as usize;
-    const SAMPLES_PER_PIXEL: usize = 200;
-    const MAX_DEPTH: usize = 50;
+    const SAMPLES_PER_PIXEL: usize = 10;
+    const MAX_DEPTH: usize = 20;
     eprintln!("Image size: {}x{} and aspect ratio: {}", IMAGE_WIDTH, IMAGE_HEIGHT, ASPECT_RATIO);
 
     // World
     let mut world = hittable_list::HittableList::new();
 
     let material_ground = Rc::new(material::Lambertian::new_with_values(vec3::Color::new_with_values(0.8, 0.8, 0.0)));
-    let material_center = Rc::new(material::Lambertian::new_with_values(vec3::Color::new_with_values(0.7, 0.3, 0.3)));
-    let material_left = Rc::new(material::Metal::new_with_values(vec3::Color::new_with_values(0.8, 0.8, 0.8), 0.3));
+    let material_center = Rc::new(material::Lambertian::new_with_values(vec3::Color::new_with_values(0.1, 0.2, 0.5)));
+    let material_left = Rc::new(material::Dielectric::new_with_values(1.5));
     let material_right = Rc::new(material::Metal::new_with_values(vec3::Color::new_with_values(0.8, 0.6, 0.2), 1.0));
 
 
