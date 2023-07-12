@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use crate::hittable::{hit_record, Hittable};
+use crate::hittable_list::HittableList;
 use crate::vec3::Point3;
 
 mod vec3;
@@ -45,41 +46,79 @@ fn hit_sphere(center: &Point3, radius: f64, r: &ray::Ray) -> f64 {
     }
 }
 
+fn random_scene() -> HittableList {
+    let mut world = HittableList::new();
+
+    let ground_material = Rc::new(material::Lambertian::new_with_values(vec3::Color::new_with_values(0.5, 0.5, 0.5)));
+    world.add(Rc::new(sphere::Sphere::new_with_values(Point3::new_with_values(0.0, -1000.0, 0.0), 1000.0, ground_material)));
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat = rtweekend::random_double();
+            let center = Point3::new_with_values(a as f64 + 0.9*rtweekend::random_double(), 0.2, b as f64 + 0.9*rtweekend::random_double());
+            if (center - Point3::new_with_values(4.0, 0.2, 0.0)).length() > 0.9 {
+                let sphere_material: Rc<dyn material::Material>;
+                if choose_mat < 0.8 {
+                    // diffuse
+                    let albedo = vec3::random() * vec3::random();
+                    sphere_material = Rc::new(material::Lambertian::new_with_values(albedo));
+                    world.add(Rc::new(sphere::Sphere::new_with_values(center, 0.2, sphere_material)));
+                } else if choose_mat < 0.95 {
+                    // metal
+                    let albedo = vec3::random_minmax(0.5, 1.0);
+                    let fuzz = rtweekend::random_double_minmax(0.0, 0.5);
+                    sphere_material = Rc::new(material::Metal::new_with_values(albedo, fuzz));
+                    world.add(Rc::new(sphere::Sphere::new_with_values(center, 0.2, sphere_material)));
+                } else {
+                    // glass
+                    sphere_material = Rc::new(material::Dielectric::new_with_values(1.5));
+                    world.add(Rc::new(sphere::Sphere::new_with_values(center, 0.2, sphere_material)));
+                }
+            }
+        }
+    }
+
+    let material1 = Rc::new(material::Dielectric::new_with_values(1.5));
+    world.add(Rc::new(sphere::Sphere::new_with_values(Point3::new_with_values(0.0, 1.0, 0.0), 1.0, material1)));
+
+    let material2 = Rc::new(material::Lambertian::new_with_values(vec3::Color::new_with_values(0.4, 0.2, 0.1)));
+    world.add(Rc::new(sphere::Sphere::new_with_values(Point3::new_with_values(-4.0, 1.0, 0.0), 1.0, material2)));
+
+    let material3 = Rc::new(material::Metal::new_with_values(vec3::Color::new_with_values(0.7, 0.6, 0.5), 0.0));
+    world.add(Rc::new(sphere::Sphere::new_with_values(Point3::new_with_values(4.0, 1.0, 0.0), 1.0, material3)));
+
+    world
+
+
+
+
+
+}
+
+
 
 fn main() {
 
     // Image
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
-    const IMAGE_WIDTH: usize = 400;
+    const IMAGE_WIDTH: usize = 1920;
     const IMAGE_HEIGHT: usize = (IMAGE_WIDTH as f64/ ASPECT_RATIO) as usize;
-    const SAMPLES_PER_PIXEL: usize = 10;
-    const MAX_DEPTH: usize = 20;
+    const SAMPLES_PER_PIXEL: usize = 500;
+    const MAX_DEPTH: usize = 50;
     eprintln!("Image size: {}x{} and aspect ratio: {}", IMAGE_WIDTH, IMAGE_HEIGHT, ASPECT_RATIO);
 
     // World
-    let R = (rtweekend::PI / 4.0).cos();
-    let mut world = hittable_list::HittableList::new();
-
-    let material_ground = Rc::new(material::Lambertian::new_with_values(vec3::Color::new_with_values(0.8, 0.8, 0.0)));
-    let material_center = Rc::new(material::Lambertian::new_with_values(vec3::Color::new_with_values(0.1, 0.2, 0.5)));
-    let material_left = Rc::new(material::Dielectric::new_with_values(1.5));
-    let material_right = Rc::new(material::Metal::new_with_values(vec3::Color::new_with_values(0.8, 0.6, 0.2), 1.0));
-
-
-
-    world.add(Rc::new(sphere::Sphere::new_with_values(vec3::Point3::new_with_values(0.0, 0.0, -1.0), 0.5, material_center.clone())));
-    world.add(Rc::new(sphere::Sphere::new_with_values(vec3::Point3::new_with_values(0.0, -100.5, -1.0), 100.0, material_ground.clone())));
-    world.add(Rc::new(sphere::Sphere::new_with_values(vec3::Point3::new_with_values(1.0, 0.0, -1.0), 0.5, material_right.clone())));
-    world.add(Rc::new(sphere::Sphere::new_with_values(vec3::Point3::new_with_values(-1.0, 0.0, -1.0), 0.5, material_left.clone())));
-
+    let mut world = random_scene();
 
     //Camera
 
-    let cam = camera::Camera::new(vec3::Point3::new_with_values(-2.0, 2.0, 1.0),
-                                  vec3::Point3::new_with_values(0.0, 0.0, -1.0),
-                                  vec3::Vec3::new_with_values(0.0, 1.0, 0.0),
-                                  20.0,
-                                  ASPECT_RATIO,);
+    let lookfrom = vec3::Point3::new_with_values(13.0, 2.0, 3.0);
+    let lookat = vec3::Point3::new_with_values(0.0, 0.0, 0.0);
+    let vup = vec3::Vec3::new_with_values(0.0, 1.0, 0.0);
+    let dist_to_focus = 10 as f64;
+    let aperture = 0.1;
+
+    let cam = camera::Camera::new(lookfrom, lookat, vup, 20.0, ASPECT_RATIO, aperture, dist_to_focus);
 
     //Render
 

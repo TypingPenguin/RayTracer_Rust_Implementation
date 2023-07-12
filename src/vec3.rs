@@ -30,7 +30,7 @@ impl Vec3 {
         self.e[2]
     }
 
-    fn length(&self) -> f64 {
+    pub(crate) fn length(&self) -> f64 {
         self.length_squared().sqrt()
     }
 
@@ -103,6 +103,16 @@ pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
     let r_out_perp = (*uv + *n * cos_theta) * etai_over_etat;
     let r_out_parallel = *n * -(1.0 - r_out_perp.length_squared()).abs().sqrt();
     r_out_perp + r_out_parallel
+}
+
+pub fn random_in_unit_disk() -> Vec3 {
+    loop {
+        let p = Vec3::new_with_values(rtweekend::random_double_minmax(-1.0, 1.0), rtweekend::random_double_minmax(-1.0, 1.0), 0.0);
+        if p.length_squared() >= 1.0 {
+            continue;
+        }
+        return p;
+    }
 }
 
 impl Neg for Vec3 {
