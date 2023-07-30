@@ -102,9 +102,9 @@ fn main() {
     // Image
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const IMAGE_WIDTH: usize = 1920;
+    const SAMPLES_PER_PIXEL: usize = 30;
+    const MAX_DEPTH: usize = 5;
     const IMAGE_HEIGHT: usize = (IMAGE_WIDTH as f64/ ASPECT_RATIO) as usize;
-    const SAMPLES_PER_PIXEL: usize = 500;
-    const MAX_DEPTH: usize = 50;
     eprintln!("Image size: {}x{} and aspect ratio: {}", IMAGE_WIDTH, IMAGE_HEIGHT, ASPECT_RATIO);
 
     // World
